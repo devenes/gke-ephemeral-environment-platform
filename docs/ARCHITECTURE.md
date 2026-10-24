@@ -176,3 +176,16 @@ The controller exposes Prometheus metrics via `controller-runtime`'s metrics ser
 - `preview_provisioning_duration_seconds` — Histogram measuring time from CR creation to `Ready`.
 - `preview_ttl_cleanup_delay_seconds` — Histogram measuring delay between `expiresAt` and namespace deletion trigger.
 - `preview_cleanup_failures_total` — Counter of cleanup/deletion errors requiring retry.
+
+---
+
+## 6. Key Findings from Live GKE Integration Testing & Post-Validation Teardown
+
+During live validation on GKE (`gke-ephemeral-env-cluster`, Kubernetes `v1.36.4-gke.1495002` in `us-west4-a`) prior to infrastructure teardown:
+
+1. **`readyAt`-Anchored Active TTL (`status.expiresAt`)**:
+   GKE's regional Gateway controller (`sc-gateway-controller`) processes `HTTPRoute` attachment and NEG backend detachment asynchronously in batches (`~20–40s`). Anchoring `status.expiresAt` to `status.readyAt + spec.ttlSeconds` once `Phase=Ready` is reached (while enforcing a `180s` provisioning timeout prior to `Ready`) guarantees that cloud load-balancer control-plane synchronization never consumes a preview environment's active TTL window.
+2. **Staged `HTTPRoute` -> `Gateway` Detach -> `Service`/`Namespace` Teardown**:
+   Deleting a Kubernetes `Service` while GKE's regional `BackendService` still references its standalone GCE `NetworkEndpointGroup` causes `gke-neg-controller` to receive `resourceInUseByAnotherResource` from the Compute Engine API. Implementing a 4-stage finalizer workflow in `pkg/controller/reconciler.go` (deleting `HTTPRoute` first and waiting until `Gateway` annotation `networking.gke.io/backend-services` detaches the tenant namespace before deleting `Service` and `Namespace`) resolved the teardown ordering dependency.
+3. **Post-Validation Teardown Status**:
+   Following successful completion of all `T00`–`T14` live GKE tests, the demo infrastructure was torn down via Terraform on `2026-10-24T09:32:17Z` (see [docs/TEARDOWN.md](TEARDOWN.md)). All architectural manifests, Terraform configurations, controller code, and test artifacts remain preserved in the repository for reproducible re-provisioning.
