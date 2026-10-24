@@ -22,3 +22,4 @@ spec:
       value: "enabled"
     - name: LOG_LEVEL
       value: "info"
+# Validated via T14 GitHub Actions PR preview lifecycle
