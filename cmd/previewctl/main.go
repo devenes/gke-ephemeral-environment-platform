@@ -22,6 +22,7 @@ import (
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/yaml"
 )
 
 func buildClient() (client.Client, error) {
@@ -104,6 +105,7 @@ Examples:
 func runCreate(ctx context.Context, cl client.Client, args []string, out io.Writer) error {
 	fs := flag.NewFlagSet("create", flag.ContinueOnError)
 	var (
+		filePath   string
 		name       string
 		image      string
 		developer  string
@@ -122,6 +124,8 @@ func runCreate(ctx context.Context, cl client.Client, args []string, out io.Writ
 		timeout    time.Duration
 	)
 
+	fs.StringVar(&filePath, "f", "", "Path to a PreviewEnvironment YAML/JSON manifest file")
+	fs.StringVar(&filePath, "file", "", "Path to a PreviewEnvironment YAML/JSON manifest file")
 	fs.StringVar(&name, "name", "", "Environment name (required, DNS-1035 label)")
 	fs.StringVar(&image, "image", "", "Container image in allowed Artifact Registry (required)")
 	fs.StringVar(&developer, "developer", "devenes", "Developer identifier")
@@ -142,44 +146,62 @@ func runCreate(ctx context.Context, cl client.Client, args []string, out io.Writ
 	if err := fs.Parse(args); err != nil {
 		return err
 	}
-	if name == "" && fs.NArg() > 0 {
-		name = fs.Arg(0)
-	}
-	if name == "" {
-		return fmt.Errorf("--name is required")
-	}
-	if image == "" {
-		return fmt.Errorf("--image is required")
-	}
 
-	var envVars []v1alpha1.EnvVar
-	if strings.TrimSpace(envFlags) != "" {
-		for _, pair := range strings.Split(envFlags, ",") {
-			kv := strings.SplitN(strings.TrimSpace(pair), "=", 2)
-			if len(kv) != 2 {
-				return fmt.Errorf("invalid --env entry %q (expected KEY=VALUE)", pair)
-			}
-			envVars = append(envVars, v1alpha1.EnvVar{Name: kv[0], Value: kv[1]})
+	var desiredSpec v1alpha1.PreviewEnvironmentSpec
+	if filePath != "" {
+		raw, err := os.ReadFile(filePath)
+		if err != nil {
+			return fmt.Errorf("read manifest %q: %w", filePath, err)
 		}
-	}
+		var fromFile v1alpha1.PreviewEnvironment
+		if err := yaml.Unmarshal(raw, &fromFile); err != nil {
+			return fmt.Errorf("unmarshal manifest %q: %w", filePath, err)
+		}
+		name = fromFile.Name
+		desiredSpec = fromFile.Spec
+		if desiredSpec.EnvironmentName == "" {
+			desiredSpec.EnvironmentName = name
+		}
+	} else {
+		if name == "" && fs.NArg() > 0 {
+			name = fs.Arg(0)
+		}
+		if name == "" {
+			return fmt.Errorf("--name is required")
+		}
+		if image == "" {
+			return fmt.Errorf("--image is required")
+		}
 
-	desiredSpec := v1alpha1.PreviewEnvironmentSpec{
-		EnvironmentName: name,
-		Developer:       developer,
-		PRNumber:        int32(prNumber),
-		Repository:      repo,
-		CommitSHA:       commitSHA,
-		Image:           image,
-		TTLSeconds:      int32(ttlSeconds),
-		Replicas:        int32(replicas),
-		Port:            int32(port),
-		Resources: v1alpha1.ResourceSpec{
-			CPURequest:    cpuReq,
-			CPULimit:      cpuLim,
-			MemoryRequest: memReq,
-			MemoryLimit:   memLim,
-		},
-		Env: envVars,
+		var envVars []v1alpha1.EnvVar
+		if strings.TrimSpace(envFlags) != "" {
+			for _, pair := range strings.Split(envFlags, ",") {
+				kv := strings.SplitN(strings.TrimSpace(pair), "=", 2)
+				if len(kv) != 2 {
+					return fmt.Errorf("invalid --env entry %q (expected KEY=VALUE)", pair)
+				}
+				envVars = append(envVars, v1alpha1.EnvVar{Name: kv[0], Value: kv[1]})
+			}
+		}
+
+		desiredSpec = v1alpha1.PreviewEnvironmentSpec{
+			EnvironmentName: name,
+			Developer:       developer,
+			PRNumber:        int32(prNumber),
+			Repository:      repo,
+			CommitSHA:       commitSHA,
+			Image:           image,
+			TTLSeconds:      int32(ttlSeconds),
+			Replicas:        int32(replicas),
+			Port:            int32(port),
+			Resources: v1alpha1.ResourceSpec{
+				CPURequest:    cpuReq,
+				CPULimit:      cpuLim,
+				MemoryRequest: memReq,
+				MemoryLimit:   memLim,
+			},
+			Env: envVars,
+		}
 	}
 
 	var existing v1alpha1.PreviewEnvironment

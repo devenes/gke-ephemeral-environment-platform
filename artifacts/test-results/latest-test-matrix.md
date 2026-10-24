@@ -331,3 +331,55 @@ preview_ttl_cleanup_delay_seconds_bucket{le="+Inf"} 0
 preview_ttl_cleanup_delay_seconds_sum 0
 preview_ttl_cleanup_delay_seconds_count 0
 ```
+
+---
+
+## T14 — GitHub Pull Request Lifecycle (`PR #1` / `pr-1`)
+- **Timestamp (UTC)**: `2026-10-24T09:06:52Z`
+- **Status**: **PASS**
+- **Pull Request**: `https://github.com/devenes/gke-ephemeral-environment-platform/pull/1` (`test/pr-preview-e2e` -> `main`, commit `815e888`)
+- **CI Workflow Run (`pull_request` opened)**: `40080038836` (`CI — Build, Test & Static Validation` — `completed / success` in `5m20s`)
+- **PR Provisioning Workflow Run (`pull_request` opened)**: `40080038798` (`PR Preview Environment Lifecycle` — `completed / success` in `5m35s`)
+  - Authenticated keyless via GitHub OIDC Workload Identity Provider `projects/697289276442/locations/global/workloadIdentityPools/gke-ephemeral-gh-pool/providers/github-oidc` as `gke-ephemeral-gh-actions@enes-turan-demo.iam.gserviceaccount.com`
+  - Built and pushed `us-west4-docker.pkg.dev/enes-turan-demo/gke-ephemeral-env/sample-app:pr-1-815e888`
+  - Connected to GKE control plane via IAM-gated DNS endpoint (`--dns-endpoint`) without modifying `master_authorized_networks_config`
+  - Provisioned `PreviewEnvironment/pr-1` (`Namespace: preview-pr-1`) and verified live external HTTP traffic at `http://35.219.134.88/preview/pr-1/version`
+- **PR Close Cleanup Workflow Run (`pull_request` closed)**: `40080468687` (`PR Preview Environment Lifecycle` — `completed / success` in `3m01s`)
+  - Executed `./bin/previewctl delete pr-1 --wait --timeout 3m` and confirmed `Namespace/preview-pr-1` was completely removed (`NotFound`)
+
+```text
+=== Live PR #1 Environment Status (Before PR Close) ===
+Name:               pr-1
+Phase:              Ready
+Namespace:          preview-pr-1
+Preview URL:        http://35.219.134.88/preview/pr-1
+Image:              us-west4-docker.pkg.dev/enes-turan-demo/gke-ephemeral-env/sample-app:pr-1-815e888
+Developer / PR:     devenes (PR #1)
+Ready Replicas:     1/1
+Remaining TTL:      58m30s
+Created At:         2026-10-24T12:01:40+03:00
+Ready At:           2026-10-24T12:02:08+03:00
+Expires At:         2026-10-24T13:02:08+03:00
+Message:            Environment ready at http://35.219.134.88/preview/pr-1
+
+=== External HTTP Verification Response (http://35.219.134.88/preview/pr-1/) ===
+{
+  "service": "preview-sample-app",
+  "status": "running",
+  "environmentName": "pr-1",
+  "namespace": "preview-pr-1",
+  "prNumber": "1",
+  "repository": "devenes/gke-ephemeral-environment-platform",
+  "commitSHA": "815e888",
+  "developer": "devenes",
+  "hostname": "preview-app-68794d8888-7djlq",
+  "version": "pr-1-815e888",
+  "gitCommit": "815e888",
+  "requestPath": "/",
+  "timestamp": "2026-10-24T09:03:38Z"
+}
+
+=== Post-Close Verification ===
+Error from server (NotFound): namespaces "preview-pr-1" not found
+```
+
