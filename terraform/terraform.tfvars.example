@@ -1,0 +1,9 @@
+project_id                = "enes-turan-demo"
+region                    = "us-west4"
+zone                      = "us-west4-a"
+cluster_name              = "gke-ephemeral-env-cluster"
+authorized_ipv4_cidr      = "203.0.113.10/32" # Replace with your workstation /32 IPv4 CIDR
+node_machine_type         = "e2-standard-2"
+node_count                = 2
+artifact_registry_repo_id = "gke-ephemeral-env"
+github_repository         = "devenes/gke-ephemeral-environment-platform"

@@ -1,0 +1,66 @@
+name: CI — Build, Test & Static Validation
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Go Unit Tests, Vet & Terraform Validation
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Secret & state file hygiene check
+        run: |
+          if git ls-files | grep -E '(\.tfstate|\.tfvars$|kubeconfig|-key\.json|credentials\.json)'; then
+            echo "ERROR: Prohibited state or credential file tracked in Git"
+            exit 1
+          fi
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: stable
+          cache: true
+
+      - name: Check Go formatting
+        run: |
+          UNFORMATTED=$(gofmt -l .)
+          if [ -n "$UNFORMATTED" ]; then
+            echo "Unformatted Go files:"
+            echo "$UNFORMATTED"
+            exit 1
+          fi
+
+      - name: Run go vet
+        run: go vet ./...
+
+      - name: Run Go unit tests with race detector
+        run: go test -v -race ./...
+
+      - name: Build CLI, Controller, and Sample App binaries
+        run: |
+          mkdir -p bin
+          go build -o bin/previewctl ./cmd/previewctl
+          go build -o bin/controller ./cmd/controller
+          go build -o bin/sample-app ./cmd/sample-app
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.9.8"
+
+      - name: Terraform fmt & validate
+        working-directory: terraform
+        run: |
+          terraform fmt -check
+          terraform init -backend=false
+          terraform validate

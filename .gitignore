@@ -1,0 +1,47 @@
+# Terraform state, lock/cache directories, and local variable overrides
+**/.terraform/
+*.tfstate
+*.tfstate.*
+crash.log
+crash.*.log
+*.tfvars
+*.tfvars.json
+!terraform.tfvars.example
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraformrc
+terraform.rc
+*.tfplan
+
+# Kubernetes & Cloud credentials / kubeconfigs
+kubeconfig
+kubeconfig.*
+*.kubeconfig
+*-key.json
+*credentials*.json
+.env
+.env.*
+
+# Go build outputs and coverage
+bin/
+dist/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+coverage.txt
+/previewctl
+/controller
+/sample-app
+
+# OS / Editor files
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*~

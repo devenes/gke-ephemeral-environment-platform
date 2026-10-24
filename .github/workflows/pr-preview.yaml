@@ -1,0 +1,212 @@
+name: PR Preview Environment Lifecycle
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+
+permissions:
+  contents: read
+
+env:
+  GCP_PROJECT_ID: "enes-turan-demo"
+  GCP_PROJECT_NUMBER: "697289276442"
+  GCP_REGION: "us-west4"
+  GKE_ZONE: "us-west4-a"
+  GKE_CLUSTER: "gke-ephemeral-env-cluster"
+  WIF_PROVIDER: "projects/697289276442/locations/global/workloadIdentityPools/gke-ephemeral-gh-pool/providers/github-oidc"
+  WIF_SERVICE_ACCOUNT: "gke-ephemeral-gh-actions@enes-turan-demo.iam.gserviceaccount.com"
+  ARTIFACT_REGISTRY: "us-west4-docker.pkg.dev/enes-turan-demo/gke-ephemeral-env"
+
+jobs:
+  security-gate:
+    name: Validate PR Origin & Parameters
+    runs-on: ubuntu-latest
+    outputs:
+      is_trusted: ${{ steps.gate.outputs.is_trusted }}
+      env_name: ${{ steps.gate.outputs.env_name }}
+      pr_number: ${{ steps.gate.outputs.pr_number }}
+      short_sha: ${{ steps.gate.outputs.short_sha }}
+    steps:
+      - name: Verify repository and fork status
+        id: gate
+        run: |
+          if [ "${{ github.repository }}" != "devenes/gke-ephemeral-environment-platform" ]; then
+            echo "Untrusted repository: ${{ github.repository }}"
+            echo "is_trusted=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if [ "${{ github.event.pull_request.head.repo.full_name }}" != "${{ github.repository }}" ]; then
+            echo "Fork PR detected (${{ github.event.pull_request.head.repo.full_name }}). Skipping privileged preview deployment."
+            echo "is_trusted=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          PR_NUM="${{ github.event.pull_request.number }}"
+          if ! [[ "$PR_NUM" =~ ^[0-9]+$ ]]; then
+            echo "Invalid PR number: $PR_NUM"
+            exit 1
+          fi
+
+          SHORT_SHA=$(echo "${{ github.event.pull_request.head.sha }}" | cut -c1-7)
+          echo "is_trusted=true" >> "$GITHUB_OUTPUT"
+          echo "pr_number=${PR_NUM}" >> "$GITHUB_OUTPUT"
+          echo "env_name=pr-${PR_NUM}" >> "$GITHUB_OUTPUT"
+          echo "short_sha=${SHORT_SHA}" >> "$GITHUB_OUTPUT"
+
+  provision-preview:
+    name: Provision / Update GKE Preview Environment
+    needs: security-gate
+    if: needs.security-gate.outputs.is_trusted == 'true' && github.event.action != 'closed'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      id-token: write
+      pull-requests: write
+    steps:
+      - name: Checkout trusted PR branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: stable
+          cache: true
+
+      - name: Build previewctl
+        run: |
+          mkdir -p bin
+          go build -o bin/previewctl ./cmd/previewctl
+
+      - name: Authenticate to Google Cloud via OIDC Workload Identity Federation
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ env.WIF_PROVIDER }}
+          service_account: ${{ env.WIF_SERVICE_ACCOUNT }}
+
+      - name: Set up Cloud SDK & GKE Auth Plugin
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          install_components: "gke-gcloud-auth-plugin"
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker "${{ env.GCP_REGION }}-docker.pkg.dev" --quiet
+
+      - name: Build and push PR sample-app image
+        run: |
+          IMAGE_TAG="pr-${{ needs.security-gate.outputs.pr_number }}-${{ needs.security-gate.outputs.short_sha }}"
+          docker build \
+            -f Dockerfile.sample-app \
+            --build-arg VERSION="${IMAGE_TAG}" \
+            --build-arg GIT_COMMIT="${{ needs.security-gate.outputs.short_sha }}" \
+            --build-arg BUILD_TIME="$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            -t "${{ env.ARTIFACT_REGISTRY }}/sample-app:${IMAGE_TAG}" .
+          docker push "${{ env.ARTIFACT_REGISTRY }}/sample-app:${IMAGE_TAG}"
+
+      - name: Connect to GKE via IAM-gated DNS Endpoint
+        run: |
+          gcloud container clusters get-credentials "${{ env.GKE_CLUSTER }}" \
+            --zone "${{ env.GKE_ZONE }}" \
+            --project "${{ env.GCP_PROJECT_ID }}" \
+            --dns-endpoint
+
+      - name: Provision or update PreviewEnvironment with retry
+        run: |
+          IMAGE_URI="${{ env.ARTIFACT_REGISTRY }}/sample-app:pr-${{ needs.security-gate.outputs.pr_number }}-${{ needs.security-gate.outputs.short_sha }}"
+          ENV_NAME="${{ needs.security-gate.outputs.env_name }}"
+          PR_NUM="${{ needs.security-gate.outputs.pr_number }}"
+
+          for attempt in 1 2 3; do
+            echo "Attempt ${attempt}: provisioning ${ENV_NAME}..."
+            if ./bin/previewctl create \
+              --name "${ENV_NAME}" \
+              --image "${IMAGE_URI}" \
+              --pr "${PR_NUM}" \
+              --developer "${{ github.actor }}" \
+              --repo "${{ github.repository }}" \
+              --commit "${{ needs.security-gate.outputs.short_sha }}" \
+              --ttl 3600 \
+              --wait \
+              --timeout 4m; then
+              break
+            fi
+            if [ "$attempt" -eq 3 ]; then
+              echo "Provisioning failed after 3 attempts"
+              exit 1
+            fi
+            sleep 5
+          done
+
+          ./bin/previewctl get "${ENV_NAME}"
+
+      - name: Verify live external HTTP preview URL
+        run: |
+          ENV_NAME="${{ needs.security-gate.outputs.env_name }}"
+          PREVIEW_URL=$(kubectl get previewenvironment "${ENV_NAME}" -o jsonpath='{.status.previewURL}')
+          echo "Verified Preview URL: ${PREVIEW_URL}"
+
+          for i in $(seq 1 30); do
+            if curl -fsS --max-time 5 "${PREVIEW_URL}/version"; then
+              echo ""
+              echo "External HTTP verification succeeded on attempt ${i}"
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "External HTTP endpoint did not respond within timeout"
+          exit 1
+
+  cleanup-preview:
+    name: Cleanup Preview Environment on PR Close
+    needs: security-gate
+    if: needs.security-gate.outputs.is_trusted == 'true' && github.event.action == 'closed'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: stable
+          cache: true
+
+      - name: Build previewctl
+        run: |
+          mkdir -p bin
+          go build -o bin/previewctl ./cmd/previewctl
+
+      - name: Authenticate to Google Cloud via OIDC Workload Identity Federation
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ env.WIF_PROVIDER }}
+          service_account: ${{ env.WIF_SERVICE_ACCOUNT }}
+
+      - name: Set up Cloud SDK & GKE Auth Plugin
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          install_components: "gke-gcloud-auth-plugin"
+
+      - name: Connect to GKE via IAM-gated DNS Endpoint
+        run: |
+          gcloud container clusters get-credentials "${{ env.GKE_CLUSTER }}" \
+            --zone "${{ env.GKE_ZONE }}" \
+            --project "${{ env.GCP_PROJECT_ID }}" \
+            --dns-endpoint
+
+      - name: Delete PreviewEnvironment and verify namespace removal
+        run: |
+          ENV_NAME="${{ needs.security-gate.outputs.env_name }}"
+          ./bin/previewctl delete "${ENV_NAME}" --wait --timeout 3m
+          if kubectl get namespace "preview-${ENV_NAME}" >/dev/null 2>&1; then
+            echo "Namespace preview-${ENV_NAME} still exists!"
+            exit 1
+          fi
+          echo "Confirmed preview-${ENV_NAME} is completely cleaned up."

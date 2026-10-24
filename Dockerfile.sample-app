@@ -1,0 +1,29 @@
+# syntax=docker/dockerfile:1
+FROM --platform=$BUILDPLATFORM golang:alpine AS builder
+
+WORKDIR /workspace
+ENV CGO_ENABLED=0 GOTOOLCHAIN=auto
+
+COPY go.mod go.sum ./
+RUN go mod download
+
+COPY cmd/ cmd/
+COPY pkg/ pkg/
+
+ARG TARGETOS=linux
+ARG TARGETARCH=amd64
+ARG VERSION=v0.1.0
+ARG GIT_COMMIT=dev
+ARG BUILD_TIME=unknown
+
+RUN GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build \
+    -trimpath \
+    -ldflags="-s -w -X main.Version=${VERSION} -X main.GitCommit=${GIT_COMMIT} -X main.BuildTime=${BUILD_TIME}" \
+    -o /out/sample-app ./cmd/sample-app
+
+FROM gcr.io/distroless/static:nonroot
+WORKDIR /
+COPY --from=builder /out/sample-app /sample-app
+USER 65532:65532
+EXPOSE 8080
+ENTRYPOINT ["/sample-app"]

@@ -1,0 +1,12 @@
+{
+  "timestamp": "2026-10-24T08:53:02Z",
+  "cluster": "gke-ephemeral-env-cluster",
+  "zone": "us-west4-a",
+  "concurrentEnvironments": 5,
+  "singleEnvironmentProvisioningSeconds": 26,
+  "singleEnvironmentALBConvergenceSeconds": 0,
+  "singleEnvironmentDeleteSeconds": 64,
+  "scaleBatchReadyLatencySeconds": 45,
+  "scaleBatchDeleteLatencySeconds": 31,
+  "orphanNamespacesAfterCleanup": 0
+}
