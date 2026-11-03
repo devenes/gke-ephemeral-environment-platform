@@ -1,10 +1,14 @@
 # GKE Ephemeral Environment Platform
 
-An Internal Developer Platform (IDP) on **Google Kubernetes Engine (GKE)** that provisions isolated, TTL-governed preview environments on demand for pull requests, feature demonstrations, and debugging workflows.
+[![CI](https://github.com/devenes/gke-ephemeral-environment-platform/actions/workflows/ci.yaml/badge.svg)](https://github.com/devenes/gke-ephemeral-environment-platform/actions/workflows/ci.yaml)
+![Go 1.27](https://img.shields.io/badge/Go-1.27-00ADD8?logo=go&logoColor=white)
+![GKE Standard + Dataplane V2](https://img.shields.io/badge/GKE-Standard%20%2B%20Dataplane%20V2-4285F4?logo=googlekubernetesengine&logoColor=white)
+![Gateway API](https://img.shields.io/badge/Kubernetes-Gateway%20API-326CE5?logo=kubernetes&logoColor=white)
+![controller-runtime](https://img.shields.io/badge/Operator-controller--runtime-326CE5?logo=kubernetes&logoColor=white)
+![Terraform](https://img.shields.io/badge/Terraform-%3E%3D1.5-7B42BC?logo=terraform&logoColor=white)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-> [!NOTE]
-> **Cloud Infrastructure Status (Torn Down After Live Validation)**:
-> This platform was provisioned via Terraform in GCP project `enes-turan-demo` (`us-west4` / `us-west4-a`), verified end-to-end across the full `T00`–`T14` live GKE test matrix (including GitHub Actions OIDC Workload Identity Federation PR lifecycle), and subsequently **torn down via Terraform on `2026-10-24T09:32:17Z`** with independent GCP verification confirming zero remaining active cluster, load balancer, VPC, or Artifact Registry resources. The historical Gateway endpoint (`http://35.219.134.88/preview/<name>`) recorded in the test evidence is no longer active. To recreate the environment, follow [docs/OPERATIONS.md](docs/OPERATIONS.md).
+An Internal Developer Platform (IDP) on **Google Kubernetes Engine (GKE)** that provisions isolated, TTL-governed preview environments on demand for pull requests, feature demonstrations, and debugging workflows.
 
 ---
 
@@ -27,64 +31,23 @@ An Internal Developer Platform (IDP) on **Google Kubernetes Engine (GKE)** that 
 
 ---
 
-## 2. Repository Structure
+## 2. Verified Test Coverage (`T00`–`T14`)
 
-```text
-.
-├── .github/workflows/
-│   ├── ci.yaml                    # Go unit tests, vet, secret check, Terraform validation
-│   └── pr-preview.yaml            # PR preview lifecycle (open/sync -> deploy, close -> cleanup)
-├── artifacts/
-│   ├── benchmarks/                # Historical live GKE scale & latency benchmark JSON outputs
-│   ├── preflight/                 # Read-only GCP, GitHub, and local toolchain preflight report
-│   └── test-results/              # Timestamped live GKE test matrix evidence (T00–T14 + defect runs)
-├── cmd/
-│   ├── controller/                # Kubernetes controller manager entrypoint
-│   ├── previewctl/                # Developer CLI (create/apply, get, list, delete, dashboard)
-│   └── sample-app/                # Sample Go HTTP preview service (/, /healthz, /readyz, /version)
-├── deploy/
-│   ├── controller/controller.yaml # Namespace, RBAC, Shared Gateway, Metrics Service, Deployment
-│   ├── crd/                       # PreviewEnvironment CustomResourceDefinition
-│   └── samples/preview-demo.yaml  # Sample PreviewEnvironment manifest
-├── docs/
-│   ├── ARCHITECTURE.md            # Architecture, Autopilot vs Standard, Gateway & NetworkPolicy design
-│   ├── COST_AND_QUOTAS.md         # Pre-deployment cost estimate, quota headroom, post-teardown status
-│   ├── OPERATIONS.md              # Build, deploy, CLI usage, metrics, and troubleshooting runbook
-│   ├── SECURITY.md                # RBAC, allowlists, eBPF isolation, OIDC WIF, and HTTP TLS limitation
-│   ├── TEARDOWN.md                # Executed Terraform teardown procedure & verification record
-│   └── TESTING.md                 # Pre-teardown T00–T14 test matrix results & defect resolution log
-├── pkg/
-│   ├── apis/platform/v1alpha1/    # PreviewEnvironment CRD Go types & scheme registration
-│   ├── controller/                # Reconciler implementation & unit tests
-│   ├── gateway/                   # Gateway API HTTPRoute builder & status inspector
-│   ├── metrics/                   # Prometheus metrics definitions
-│   └── validation/                # Image allowlist, resource bounds, TTL, and env validator
-├── scripts/
-│   └── run-test-matrix.sh         # Reproducible live GKE integration & E2E test runner
-├── terraform/                     # Terraform configuration for VPC, subnets, NAT, AR, WIF, and GKE
-├── Dockerfile.controller          # Multi-stage distroless non-root image for preview-controller
-└── Dockerfile.sample-app          # Multi-stage distroless non-root image for sample-app
-```
+All 15 verification suites (`T00`–`T14`) were executed directly against a live GKE cluster (`gke-ephemeral-env-cluster` in `us-west4-a`):
 
----
-
-## 3. Verified Test Coverage (`T00`–`T14`)
-
-Before the demo infrastructure was torn down, all 15 verification suites (`T00`–`T14`) were executed directly against the real GKE cluster (`gke-ephemeral-env-cluster` in `us-west4-a`):
-
-| Suite | Scope | Pre-Teardown Result |
+| Suite | Scope | Result |
 |---|---|---|
 | **Local Unit & Static Checks (`T00`)** | `gofmt`, `go vet`, `go test -race ./...` (`cmd/previewctl`, `cmd/sample-app`, `pkg/controller`, `pkg/gateway`, `pkg/validation`), `terraform fmt -check`, `terraform validate` | **PASS** (runs locally without cluster) |
-| **GKE & Gateway Lifecycle (`T01`–`T04`)** | Cluster readiness, CRD/Controller deployment, single & multi-environment routing (`pr-101`, `env-alpha`, `env-beta`) over 1 shared Gateway IP | **PASS** (`27s` provisioning, `4s` ALB convergence) |
+| **GKE & Gateway Lifecycle (`T01`–`T04`)** | Cluster readiness, CRD/Controller deployment, single & multi-environment routing (`pr-101`, `env-alpha`, `env-beta`) over 1 shared Gateway IP (`<GATEWAY_IP>`) | **PASS** (`27s` provisioning, `4s` ALB convergence) |
 | **Multi-Tenant Isolation (`T05`–`T07`)** | `LimitRange` default injection & max ceiling, `ResourceQuota` admission rejection, Dataplane V2 Cilium eBPF `NetworkPolicy` cross-namespace drop, invalid registry/resource/schema rejection | **PASS** |
 | **TTL, Deletion, Resilience & Scale (`T08`–`T13`)** | Automatic TTL expiration (`35s`), manual staged deletion (`64s`), controller restart UID preservation, idempotency, child deletion self-healing (`~10s`), 5-environment concurrent scale benchmark (`45s` ready, `31s` batch delete, `0` orphans) | **PASS** |
 | **GitHub Actions PR Lifecycle (`T14`)** | Real GitHub PR #1 opened -> OIDC WIF auth -> image build/push -> GKE DNS endpoint deploy -> live HTTP verification -> PR close automatic cleanup | **PASS** |
 
-See [docs/TESTING.md](docs/TESTING.md) and [artifacts/test-results/latest-test-matrix.md](artifacts/test-results/latest-test-matrix.md) for the complete pre-teardown evidence and defect resolution log.
+See [docs/TESTING.md](docs/TESTING.md) and [artifacts/test-results/latest-test-matrix.md](artifacts/test-results/latest-test-matrix.md) for the complete verification evidence and defect resolution log.
 
 ---
 
-## 4. `previewctl` CLI Usage
+## 3. `previewctl` CLI Usage
 
 Build `previewctl` locally (works offline without an active cluster):
 
@@ -99,7 +62,7 @@ When connected to a GKE cluster where the platform is deployed (see [docs/OPERAT
 # Request a preview environment via flags and wait for Ready + external URL
 ./bin/previewctl create \
   --name demo-pr-42 \
-  --image us-west4-docker.pkg.dev/enes-turan-demo/gke-ephemeral-env/sample-app:v0.1.0 \
+  --image us-west4-docker.pkg.dev/your-gcp-project-id/gke-ephemeral-env/sample-app:v0.1.0 \
   --pr 42 \
   --ttl 1800 \
   --env FEATURE_FLAG=true \
@@ -124,7 +87,7 @@ When connected to a GKE cluster where the platform is deployed (see [docs/OPERAT
 
 ---
 
-## 5. Documentation Index
+## 4. Documentation Index
 
 - [Architecture & Design Decisions](docs/ARCHITECTURE.md)
 - [Operations Runbook (Local Checks vs. Full Cloud Recreate)](docs/OPERATIONS.md)

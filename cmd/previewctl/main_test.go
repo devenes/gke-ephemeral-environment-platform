@@ -26,7 +26,7 @@ func TestPreviewctlLifecycleCommands(t *testing.T) {
 	err := run(ctx, []string{
 		"create",
 		"--name", "cli-test",
-		"--image", "us-west4-docker.pkg.dev/enes-turan-demo/gke-ephemeral-env/sample-app:v0.1.0",
+		"--image", "us-west4-docker.pkg.dev/your-gcp-project-id/gke-ephemeral-env/sample-app:v0.1.0",
 		"--pr", "77",
 		"--ttl", "1200",
 	}, &stdout, &stderr, cl)

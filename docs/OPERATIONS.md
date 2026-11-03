@@ -1,7 +1,7 @@
 # Operations Runbook — GKE Ephemeral Environment Platform
 
 > [!NOTE]
-> **Current Infrastructure State**: The demo GCP infrastructure in `enes-turan-demo` (`us-west4` / `us-west4-a`) was torn down via Terraform on `2026-10-24T09:32:17Z` after live GKE validation (`T00`–`T14`) completed.
+> **Current Infrastructure State**: The demo GCP infrastructure in `your-gcp-project-id` (`us-west4` / `us-west4-a`) was torn down via Terraform on `2026-10-24T09:32:17Z` after live GKE validation (`T00`–`T14`) completed.
 > - **Section 1** documents **offline local verification and build commands** that run immediately without any cloud resources.
 > - **Sections 2–6** document the **verified cloud provisioning, deployment, CLI operation, and observability procedures** that require re-applying the Terraform configuration first.
 
@@ -36,7 +36,7 @@ terraform validate
 
 ## 2. Re-Provisioning Cloud Infrastructure via Terraform (Requires GCP Access)
 
-To recreate the GKE cluster, dedicated VPC (`gke-ephemeral-env-vpc`), proxy-only subnet, Cloud Router/NAT, Artifact Registry (`gke-ephemeral-env`), least-privilege Service Accounts, and GitHub OIDC Workload Identity Pool in `enes-turan-demo`:
+To recreate the GKE cluster, dedicated VPC (`gke-ephemeral-env-vpc`), proxy-only subnet, Cloud Router/NAT, Artifact Registry (`gke-ephemeral-env`), least-privilege Service Accounts, and GitHub OIDC Workload Identity Pool in `your-gcp-project-id`:
 
 ```bash
 cd terraform
@@ -49,13 +49,13 @@ terraform plan -out=tf.plan
 terraform apply tf.plan
 ```
 
-Configure `kubectl` to connect to the newly created GKE cluster in `enes-turan-demo` (`us-west4-a`):
+Configure `kubectl` to connect to the newly created GKE cluster in `your-gcp-project-id` (`us-west4-a`):
 
 ```bash
 export PATH="/opt/homebrew/share/google-cloud-sdk/bin:$PATH"
 gcloud container clusters get-credentials gke-ephemeral-env-cluster \
   --zone us-west4-a \
-  --project enes-turan-demo
+  --project your-gcp-project-id
 ```
 
 For IAM-gated DNS endpoint access (used by GitHub Actions CI/CD or when connecting from dynamic IPs with appropriate IAM roles):
@@ -63,7 +63,7 @@ For IAM-gated DNS endpoint access (used by GitHub Actions CI/CD or when connecti
 ```bash
 gcloud container clusters get-credentials gke-ephemeral-env-cluster \
   --zone us-west4-a \
-  --project enes-turan-demo \
+  --project your-gcp-project-id \
   --dns-endpoint
 ```
 
@@ -80,7 +80,7 @@ gcloud auth configure-docker us-west4-docker.pkg.dev --quiet
 Build and push `linux/amd64` images for the sample application and controller:
 
 ```bash
-export REGISTRY="us-west4-docker.pkg.dev/enes-turan-demo/gke-ephemeral-env"
+export REGISTRY="us-west4-docker.pkg.dev/your-gcp-project-id/gke-ephemeral-env"
 export TAG="v0.1.0"
 
 # Sample HTTP Application
@@ -122,7 +122,7 @@ Wait until `preview-shared-gateway` reports `PROGRAMMED = True` and an external 
 # Via CLI flags
 ./bin/previewctl create \
   --name pr-101 \
-  --image us-west4-docker.pkg.dev/enes-turan-demo/gke-ephemeral-env/sample-app:v0.1.0 \
+  --image us-west4-docker.pkg.dev/your-gcp-project-id/gke-ephemeral-env/sample-app:v0.1.0 \
   --pr 101 \
   --ttl 1800 \
   --env FEATURE_BANNER=enabled \
@@ -184,5 +184,5 @@ To audit whether any tenant namespaces or GCE Network Endpoint Groups exist with
 ```bash
 kubectl get ns -l platform.gke.io/managed-by=preview-controller
 kubectl get previewenvironments
-gcloud compute network-endpoint-groups list --project=enes-turan-demo --zones=us-west4-a
+gcloud compute network-endpoint-groups list --project=your-gcp-project-id --zones=us-west4-a
 ```

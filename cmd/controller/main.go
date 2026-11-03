@@ -41,7 +41,7 @@ func main() {
 	flag.StringVar(&metricsAddr, "metrics-bind-address", ":8080", "The address the metric endpoint binds to.")
 	flag.StringVar(&probeAddr, "health-probe-bind-address", ":8081", "The address the probe endpoint binds to.")
 	flag.BoolVar(&enableLeaderElection, "leader-elect", false, "Enable leader election for controller manager.")
-	flag.StringVar(&allowedImagePrefixes, "allowed-image-prefixes", "us-west4-docker.pkg.dev/enes-turan-demo/gke-ephemeral-env/", "Comma-separated list of allowed container image registry prefixes.")
+	flag.StringVar(&allowedImagePrefixes, "allowed-image-prefixes", "us-west4-docker.pkg.dev/your-gcp-project-id/gke-ephemeral-env/", "Comma-separated list of allowed container image registry prefixes.")
 	flag.StringVar(&gatewayName, "gateway-name", "preview-shared-gateway", "Name of the shared GKE Gateway resource.")
 	flag.StringVar(&gatewayNamespace, "gateway-namespace", "preview-platform-system", "Namespace of the shared GKE Gateway resource.")
 	flag.StringVar(&proxySubnetCIDR, "proxy-subnet-cidr", "10.42.16.0/23", "CIDR of the Regional Managed Proxy subnet allowed by NetworkPolicy.")

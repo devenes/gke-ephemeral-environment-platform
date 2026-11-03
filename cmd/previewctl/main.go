@@ -95,7 +95,7 @@ Commands:
   dashboard   Start a local-only (127.0.0.1) read-only HTML status dashboard
 
 Examples:
-  previewctl create --name pr-42 --image us-west4-docker.pkg.dev/enes-turan-demo/gke-ephemeral-env/sample-app:v0.1.0 --pr 42 --ttl 1800 --wait
+  previewctl create --name pr-42 --image us-west4-docker.pkg.dev/your-gcp-project-id/gke-ephemeral-env/sample-app:v0.1.0 --pr 42 --ttl 1800 --wait
   previewctl get pr-42
   previewctl list
   previewctl delete pr-42 --wait

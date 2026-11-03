@@ -94,7 +94,7 @@ roleRef:
   name: preview-github-actions-role
 subjects:
   - kind: User
-    name: gke-ephemeral-gh-actions@enes-turan-demo.iam.gserviceaccount.com
+    name: gke-ephemeral-gh-actions@your-gcp-project-id.iam.gserviceaccount.com
     apiGroup: rbac.authorization.k8s.io
 ---
 apiVersion: gateway.networking.k8s.io/v1
@@ -162,7 +162,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: controller
-          image: us-west4-docker.pkg.dev/enes-turan-demo/gke-ephemeral-env/preview-controller:v0.1.0
+          image: us-west4-docker.pkg.dev/your-gcp-project-id/gke-ephemeral-env/preview-controller:v0.1.0
           imagePullPolicy: Always
           args:
             - "--metrics-bind-address=:8080"
@@ -170,7 +170,7 @@ spec:
             - "--gateway-name=preview-shared-gateway"
             - "--gateway-namespace=preview-platform-system"
             - "--proxy-subnet-cidr=10.42.16.0/23"
-            - "--allowed-image-prefixes=us-west4-docker.pkg.dev/enes-turan-demo/gke-ephemeral-env/"
+            - "--allowed-image-prefixes=us-west4-docker.pkg.dev/your-gcp-project-id/gke-ephemeral-env/"
           ports:
             - name: metrics
               containerPort: 8080

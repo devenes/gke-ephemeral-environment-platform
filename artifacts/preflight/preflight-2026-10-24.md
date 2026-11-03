@@ -1,8 +1,8 @@
 # Phase 1 — Read-Only Preflight Report
 
 - **Timestamp**: `2026-10-24T10:44:49+03:00` (`2026-10-24T07:44:49Z`)
-- **Workspace Path**: `/Users/enes/GitHub/gke-ephemeral-environment-platform`
-- **Target GCP Project**: `enes-turan-demo` (Project Number: `697289276442`)
+- **Workspace Path**: `/path/to/gke-ephemeral-environment-platform`
+- **Target GCP Project**: `your-gcp-project-id` (Project Number: `123456789012`)
 - **Preferred Region / Zone**: `us-west4` / `us-west4-a`
 
 ---
@@ -11,7 +11,7 @@
 
 | Check | Observed Value | Status |
 |---|---|---|
-| Working directory exists | `/Users/enes/GitHub/gke-ephemeral-environment-platform` | PASS |
+| Working directory exists | `/path/to/gke-ephemeral-environment-platform` | PASS |
 | Existing contents | `.git/`, `.gitattributes` (66B) | PASS |
 | Git branch & status | `main...origin/main` (clean working tree) | PASS |
 | HEAD commit | `130a6c8 Initial commit` (`2026-10-24 10:40:49 +0300`) | PASS |
@@ -40,10 +40,10 @@
 
 | Check | Observed Value | Status |
 |---|---|---|
-| Active Account | `ahmedenesturan@gmail.com` | PASS |
+| Active Account | `user@example.com` | PASS |
 | Application Default Credentials (ADC) | Valid (`gcloud auth application-default print-access-token` succeeded) | PASS |
-| Active Project ID | `enes-turan-demo` | PASS |
-| Project Number | `697289276442` | PASS |
+| Active Project ID | `your-gcp-project-id` | PASS |
+| Project Number | `123456789012` | PASS |
 | Project Lifecycle State | `ACTIVE` | PASS |
 | Billing Enabled | `true` (`billingAccounts/016EBC-28B3CB-A7470E`) | PASS |
 | Developer Egress IP | Verified `/32` public IPv4 egress for master authorized networks | PASS |
@@ -58,10 +58,10 @@
 - **Artifact Registry Repositories**: `0` repositories across all locations.
 - **Cloud Storage Buckets**: `0` buckets.
 - **Service Accounts**:
-  - `697289276442-compute@developer.gserviceaccount.com` (Compute Engine default service account)
-  - `ais-gemini-key-c62308ae7c414d2@697289276442.iam.gserviceaccount.com` (Unrelated — preserved untouched)
+  - `123456789012-compute@developer.gserviceaccount.com` (Compute Engine default service account)
+  - `preexisting-workload-sa@123456789012.iam.gserviceaccount.com` (Unrelated — preserved untouched)
 - **Workload Identity Pools**:
-  - `projects/697289276442/locations/global/workloadIdentityPools/enes-turan-demo.svc.id.goog` (`ACTIVE`)
+  - `projects/123456789012/locations/global/workloadIdentityPools/your-gcp-project-id.svc.id.goog` (`ACTIVE`)
   - No soft-deleted custom Workload Identity Pools.
 - **Monitoring Alert Policies**: `0` policies.
 - **Key Enabled APIs**:
@@ -108,4 +108,4 @@
 
 ## 6. Preflight Conclusion
 
-All tools, authentications, permissions, APIs, and regional/global quotas in `enes-turan-demo` (`us-west4`) are verified and healthy. No conflicting infrastructure exists. Safe to proceed to Phase 2 (Research & Architecture Decisions) and Phase 3 (Terraform Infrastructure).
+All tools, authentications, permissions, APIs, and regional/global quotas in `your-gcp-project-id` (`us-west4`) are verified and healthy. No conflicting infrastructure exists. Safe to proceed to Phase 2 (Research & Architecture Decisions) and Phase 3 (Terraform Infrastructure).

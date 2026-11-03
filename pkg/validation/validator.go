@@ -38,12 +38,12 @@ type Policy struct {
 	MaxNamespaceMemory   resource.Quantity
 }
 
-// DefaultPolicy returns the standard platform policy for enes-turan-demo.
+// DefaultPolicy returns the standard platform policy for your-gcp-project-id.
 func DefaultPolicy(allowedPrefixes ...string) Policy {
 	prefixes := allowedPrefixes
 	if len(prefixes) == 0 {
 		prefixes = []string{
-			"us-west4-docker.pkg.dev/enes-turan-demo/gke-ephemeral-env/",
+			"us-west4-docker.pkg.dev/your-gcp-project-id/gke-ephemeral-env/",
 		}
 	}
 	return Policy{

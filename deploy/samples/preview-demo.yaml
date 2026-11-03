@@ -8,7 +8,7 @@ spec:
   prNumber: 101
   repository: devenes/gke-ephemeral-environment-platform
   commitSHA: "130a6c8"
-  image: us-west4-docker.pkg.dev/enes-turan-demo/gke-ephemeral-env/sample-app:v0.1.0
+  image: us-west4-docker.pkg.dev/your-gcp-project-id/gke-ephemeral-env/sample-app:v0.1.0
   ttlSeconds: 86400
   replicas: 1
   port: 8080

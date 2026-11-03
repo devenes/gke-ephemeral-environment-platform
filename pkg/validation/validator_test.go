@@ -8,8 +8,8 @@ import (
 )
 
 func TestValidatePreviewEnvironment(t *testing.T) {
-	policy := DefaultPolicy("us-west4-docker.pkg.dev/enes-turan-demo/gke-ephemeral-env/")
-	validImage := "us-west4-docker.pkg.dev/enes-turan-demo/gke-ephemeral-env/sample-app:v0.1.0"
+	policy := DefaultPolicy("us-west4-docker.pkg.dev/your-gcp-project-id/gke-ephemeral-env/")
+	validImage := "us-west4-docker.pkg.dev/your-gcp-project-id/gke-ephemeral-env/sample-app:v0.1.0"
 
 	tests := []struct {
 		name       string
@@ -31,7 +31,7 @@ func TestValidatePreviewEnvironment(t *testing.T) {
 			pe: &v1alpha1.PreviewEnvironment{
 				ObjectMeta: metav1.ObjectMeta{Name: "pr-102"},
 				Spec: v1alpha1.PreviewEnvironmentSpec{
-					Image:      "us-west4-docker.pkg.dev/enes-turan-demo/gke-ephemeral-env/sample-app@sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+					Image:      "us-west4-docker.pkg.dev/your-gcp-project-id/gke-ephemeral-env/sample-app@sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
 					TTLSeconds: 600,
 					Replicas:   2,
 					Port:       8080,
@@ -63,7 +63,7 @@ func TestValidatePreviewEnvironment(t *testing.T) {
 			pe: &v1alpha1.PreviewEnvironment{
 				ObjectMeta: metav1.ObjectMeta{Name: "bad-tag"},
 				Spec: v1alpha1.PreviewEnvironmentSpec{
-					Image: "us-west4-docker.pkg.dev/enes-turan-demo/gke-ephemeral-env/sample-app:latest",
+					Image: "us-west4-docker.pkg.dev/your-gcp-project-id/gke-ephemeral-env/sample-app:latest",
 				},
 			},
 			wantReason: "DisallowedImage",
@@ -73,7 +73,7 @@ func TestValidatePreviewEnvironment(t *testing.T) {
 			pe: &v1alpha1.PreviewEnvironment{
 				ObjectMeta: metav1.ObjectMeta{Name: "no-tag"},
 				Spec: v1alpha1.PreviewEnvironmentSpec{
-					Image: "us-west4-docker.pkg.dev/enes-turan-demo/gke-ephemeral-env/sample-app",
+					Image: "us-west4-docker.pkg.dev/your-gcp-project-id/gke-ephemeral-env/sample-app",
 				},
 			},
 			wantReason: "DisallowedImage",

@@ -1,16 +1,16 @@
 # Live GKE Integration & E2E Test Matrix Evidence
 
 - **Run Timestamp (UTC)**: `2026-10-24T08:42:39Z`
-- **GCP Project**: `enes-turan-demo`
+- **GCP Project**: `your-gcp-project-id`
 - **GKE Cluster**: `gke-ephemeral-env-cluster` (`us-west4-a`)
-- **Sample Image**: `us-west4-docker.pkg.dev/enes-turan-demo/gke-ephemeral-env/sample-app:v0.1.0`
+- **Sample Image**: `us-west4-docker.pkg.dev/your-gcp-project-id/gke-ephemeral-env/sample-app:v0.1.0`
 
 ---
 
 ## T00 — Preflight and Code Quality
 - **Timestamp (UTC)**: `2026-10-24T08:42:39Z`
 - **Status**: **PASS**
-- **Active Kube Context**: `gke_enes-turan-demo_us-west4-a_gke-ephemeral-env-cluster`
+- **Active Kube Context**: `gke_your-gcp-project-id_us-west4-a_gke-ephemeral-env-cluster`
 - **Kind / Minikube Check**: kind=`/opt/homebrew/bin/kind`, minikube=`not-installed` (neither used)
 - **Terraform Validation**: `Success! The configuration is valid.`
 
@@ -30,7 +30,7 @@ ok  	github.com/devenes/gke-ephemeral-environment-platform/pkg/validation	(cache
 ## T01 — GKE Deployment & Shared Gateway Readiness
 - **Timestamp (UTC)**: `2026-10-24T08:42:48Z`
 - **Status**: **PASS**
-- **Shared Gateway IP**: `35.219.134.88`
+- **Shared Gateway IP**: `203.0.113.10`
 
 ```text
 === NODES ===
@@ -47,7 +47,7 @@ preview-controller-6d8f8cb5d9-m4zmf   1/1     Running   0          8m6s   10.42.
 NAME                               CONTROLLER                  ACCEPTED   AGE
 gke-l7-regional-external-managed   networking.gke.io/gateway   True       41m
 NAME                     CLASS                              ADDRESS         PROGRAMMED   AGE
-preview-shared-gateway   gke-l7-regional-external-managed   35.219.134.88   True         36m
+preview-shared-gateway   gke-l7-regional-external-managed   203.0.113.10   True         36m
 ```
 
 ---
@@ -62,24 +62,24 @@ preview-shared-gateway   gke-l7-regional-external-managed   35.219.134.88   True
 Name:               pr-101
 Phase:              Ready
 Namespace:          preview-pr-101
-Preview URL:        http://35.219.134.88/preview/pr-101
-Image:              us-west4-docker.pkg.dev/enes-turan-demo/gke-ephemeral-env/sample-app:v0.1.0
+Preview URL:        http://203.0.113.10/preview/pr-101
+Image:              us-west4-docker.pkg.dev/your-gcp-project-id/gke-ephemeral-env/sample-app:v0.1.0
 Developer / PR:     devenes (PR #101)
 Ready Replicas:     1/1
 Remaining TTL:      29m58s
 Created At:         2026-10-24T11:42:57+03:00
 Ready At:           2026-10-24T11:43:22+03:00
 Expires At:         2026-10-24T12:13:22+03:00
-Message:            Environment ready at http://35.219.134.88/preview/pr-101
+Message:            Environment ready at http://203.0.113.10/preview/pr-101
 Conditions:
   - Validated        Status=True  Reason=SpecValid              Message=Spec passed platform security and resource validation
   - NamespaceReady   Status=True  Reason=NamespaceProvisioned   Message=Namespace preview-pr-101, ResourceQuota, LimitRange, and NetworkPolicy reconciled
   - WorkloadReady    Status=True  Reason=DeploymentAvailable    Message=Deployment has 1/1 ready replicas
   - RouteAccepted    Status=True  Reason=Accepted               Message=HTTPRoute accepted by shared Gateway
-  - Ready            Status=True  Reason=EnvironmentReady       Message=Preview environment healthy and routed at http://35.219.134.88/preview/pr-101
+  - Ready            Status=True  Reason=EnvironmentReady       Message=Preview environment healthy and routed at http://203.0.113.10/preview/pr-101
 === CHILD RESOURCES IN preview-pr-101 ===
 NAME                          READY   UP-TO-DATE   AVAILABLE   AGE   CONTAINERS   IMAGES                                                                        SELECTOR
-deployment.apps/preview-app   1/1     1            1           27s   app          us-west4-docker.pkg.dev/enes-turan-demo/gke-ephemeral-env/sample-app:v0.1.0   app.kubernetes.io/instance=pr-101,app.kubernetes.io/name=preview-app
+deployment.apps/preview-app   1/1     1            1           27s   app          us-west4-docker.pkg.dev/your-gcp-project-id/gke-ephemeral-env/sample-app:v0.1.0   app.kubernetes.io/instance=pr-101,app.kubernetes.io/name=preview-app
 
 NAME                               READY   STATUS    RESTARTS   AGE   IP             NODE                                                  NOMINATED NODE   READINESS GATES
 pod/preview-app-675bf986bf-lc552   1/1     Running   0          28s   10.42.129.26   gke-gke-ephemeral-en-gke-ephemeral-en-ef45ad22-v1xv   <none>           <none>
@@ -105,7 +105,7 @@ httproute.gateway.networking.k8s.io/preview-route               29s
 ## T03 — External HTTP Access (`pr-101`)
 - **Timestamp (UTC)**: `2026-10-24T08:43:26Z`
 - **Status**: **PASS**
-- **External URL**: `http://35.219.134.88/preview/pr-101`
+- **External URL**: `http://203.0.113.10/preview/pr-101`
 - **ALB Data-Plane Convergence After Ready**: `0s`
 
 ```json
@@ -146,18 +146,18 @@ httproute.gateway.networking.k8s.io/preview-route               29s
 ## T04 — Concurrent Multi-Environment Routing (`env-alpha` & `env-beta`)
 - **Timestamp (UTC)**: `2026-10-24T08:43:29Z`
 - **Status**: **PASS**
-- **env-alpha URL**: `http://35.219.134.88/preview/env-alpha` -> `environmentName=env-alpha`
-- **env-beta URL**: `http://35.219.134.88/preview/env-beta` -> `environmentName=env-beta`
+- **env-alpha URL**: `http://203.0.113.10/preview/env-alpha` -> `environmentName=env-alpha`
+- **env-beta URL**: `http://203.0.113.10/preview/env-beta` -> `environmentName=env-beta`
 
 ```text
 NAME       PHASE  NAMESPACE          READY  REMAINING_TTL  PREVIEW_URL                             MESSAGE
-env-alpha  Ready  preview-env-alpha  1/1    29m50s         http://35.219.134.88/preview/env-alpha  Environment ready at http://35.219.134.88/preview/env-alpha
-env-beta   Ready  preview-env-beta   1/1    29m50s         http://35.219.134.88/preview/env-beta   Environment ready at http://35.219.134.88/preview/env-beta
-pr-101     Ready  preview-pr-101     1/1    29m10s         http://35.219.134.88/preview/pr-101     Environment ready at http://35.219.134.88/preview/pr-101
+env-alpha  Ready  preview-env-alpha  1/1    29m50s         http://203.0.113.10/preview/env-alpha  Environment ready at http://203.0.113.10/preview/env-alpha
+env-beta   Ready  preview-env-beta   1/1    29m50s         http://203.0.113.10/preview/env-beta   Environment ready at http://203.0.113.10/preview/env-beta
+pr-101     Ready  preview-pr-101     1/1    29m10s         http://203.0.113.10/preview/pr-101     Environment ready at http://203.0.113.10/preview/pr-101
 
 === GCP Forwarding Rules (Single Shared Load Balancer Verified) ===
 NAME                                                             IP_ADDRESS     TARGET
-gkegw1-tot4-preview-platform-sy-preview-shared-gat-k1fyo43l5rgh  35.219.134.88  https://www.googleapis.com/compute/v1/projects/enes-turan-demo/regions/us-west4/targetHttpProxies/gkegw1-tot4-preview-platform-sy-preview-shared-gat-6mtow4usstbr
+gkegw1-tot4-preview-platform-sy-preview-shared-gat-k1fyo43l5rgh  203.0.113.10  https://www.googleapis.com/compute/v1/projects/your-gcp-project-id/regions/us-west4/targetHttpProxies/gkegw1-tot4-preview-platform-sy-preview-shared-gat-6mtow4usstbr
 ```
 
 ---
@@ -202,7 +202,7 @@ probe failed for http://10.42.129.28:8080/healthz: Get "http://10.42.129.28:8080
 ## T07 — Invalid Requests (API Admission & Controller Validation Layers)
 - **Timestamp (UTC)**: `2026-10-24T08:46:36Z`
 - **Status**: **PASS**
-- **Disallowed Image Registry (Controller Layer)**: Phase=`Failed`, Reason=`DisallowedImage` (image "docker.io/library/nginx:1.27" is not from an allowed Artifact Registry prefix ([us-west4-docker.pkg.dev/enes-turan-demo/gke-ephemeral-env/]))
+- **Disallowed Image Registry (Controller Layer)**: Phase=`Failed`, Reason=`DisallowedImage` (image "docker.io/library/nginx:1.27" is not from an allowed Artifact Registry prefix ([us-west4-docker.pkg.dev/your-gcp-project-id/gke-ephemeral-env/]))
 - **Excessive CPU/Memory (Controller Layer)**: Phase=`Failed`, Reason=`ExcessiveResources` (per-pod cpuLimit (2) exceeds platform maximum (500m))
 
 ```text
@@ -256,7 +256,7 @@ Confirmed PreviewEnvironment "pr-101" and its owned namespace are completely rem
 
 ```text
 NAME                          READY   UP-TO-DATE   AVAILABLE   AGE   CONTAINERS   IMAGES                                                                        SELECTOR
-deployment.apps/preview-app   1/1     1            1           10s   app          us-west4-docker.pkg.dev/enes-turan-demo/gke-ephemeral-env/sample-app:v0.1.0   app.kubernetes.io/instance=resilient-env,app.kubernetes.io/name=preview-app
+deployment.apps/preview-app   1/1     1            1           10s   app          us-west4-docker.pkg.dev/your-gcp-project-id/gke-ephemeral-env/sample-app:v0.1.0   app.kubernetes.io/instance=resilient-env,app.kubernetes.io/name=preview-app
 
 NAME                  TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)   AGE   SELECTOR
 service/preview-svc   ClusterIP   10.43.15.123   <none>        80/TCP    11s   app.kubernetes.io/instance=resilient-env,app.kubernetes.io/name=preview-app
@@ -278,11 +278,11 @@ pod/preview-app-fc799f8f-pq67b   1/1     Running   0          10s   10.42.129.36
 ```text
 === Active Scale Environments ===
 NAME     PHASE  NAMESPACE        READY  REMAINING_TTL  PREVIEW_URL                           MESSAGE
-scale-1  Ready  preview-scale-1  1/1    29m49s         http://35.219.134.88/preview/scale-1  Environment ready at http://35.219.134.88/preview/scale-1
-scale-2  Ready  preview-scale-2  1/1    29m49s         http://35.219.134.88/preview/scale-2  Environment ready at http://35.219.134.88/preview/scale-2
-scale-3  Ready  preview-scale-3  1/1    29m50s         http://35.219.134.88/preview/scale-3  Environment ready at http://35.219.134.88/preview/scale-3
-scale-4  Ready  preview-scale-4  1/1    29m49s         http://35.219.134.88/preview/scale-4  Environment ready at http://35.219.134.88/preview/scale-4
-scale-5  Ready  preview-scale-5  1/1    29m49s         http://35.219.134.88/preview/scale-5  Environment ready at http://35.219.134.88/preview/scale-5
+scale-1  Ready  preview-scale-1  1/1    29m49s         http://203.0.113.10/preview/scale-1  Environment ready at http://203.0.113.10/preview/scale-1
+scale-2  Ready  preview-scale-2  1/1    29m49s         http://203.0.113.10/preview/scale-2  Environment ready at http://203.0.113.10/preview/scale-2
+scale-3  Ready  preview-scale-3  1/1    29m50s         http://203.0.113.10/preview/scale-3  Environment ready at http://203.0.113.10/preview/scale-3
+scale-4  Ready  preview-scale-4  1/1    29m49s         http://203.0.113.10/preview/scale-4  Environment ready at http://203.0.113.10/preview/scale-4
+scale-5  Ready  preview-scale-5  1/1    29m49s         http://203.0.113.10/preview/scale-5  Environment ready at http://203.0.113.10/preview/scale-5
 
 === Controller Prometheus Metrics ===
 # HELP preview_cleanup_failures_total Total number of errors encountered during PreviewEnvironment teardown or finalizer cleanup.
@@ -340,10 +340,10 @@ preview_ttl_cleanup_delay_seconds_count 0
 - **Pull Request**: `https://github.com/devenes/gke-ephemeral-environment-platform/pull/1` (`test/pr-preview-e2e` -> `main`, commit `815e888`)
 - **CI Workflow Run (`pull_request` opened)**: `40080038836` (`CI — Build, Test & Static Validation` — `completed / success` in `5m20s`)
 - **PR Provisioning Workflow Run (`pull_request` opened)**: `40080038798` (`PR Preview Environment Lifecycle` — `completed / success` in `5m35s`)
-  - Authenticated keyless via GitHub OIDC Workload Identity Provider `projects/697289276442/locations/global/workloadIdentityPools/gke-ephemeral-gh-pool/providers/github-oidc` as `gke-ephemeral-gh-actions@enes-turan-demo.iam.gserviceaccount.com`
-  - Built and pushed `us-west4-docker.pkg.dev/enes-turan-demo/gke-ephemeral-env/sample-app:pr-1-815e888`
+  - Authenticated keyless via GitHub OIDC Workload Identity Provider `projects/123456789012/locations/global/workloadIdentityPools/gke-ephemeral-gh-pool/providers/github-oidc` as `gke-ephemeral-gh-actions@your-gcp-project-id.iam.gserviceaccount.com`
+  - Built and pushed `us-west4-docker.pkg.dev/your-gcp-project-id/gke-ephemeral-env/sample-app:pr-1-815e888`
   - Connected to GKE control plane via IAM-gated DNS endpoint (`--dns-endpoint`) without modifying `master_authorized_networks_config`
-  - Provisioned `PreviewEnvironment/pr-1` (`Namespace: preview-pr-1`) and verified live external HTTP traffic at `http://35.219.134.88/preview/pr-1/version`
+  - Provisioned `PreviewEnvironment/pr-1` (`Namespace: preview-pr-1`) and verified live external HTTP traffic at `http://203.0.113.10/preview/pr-1/version`
 - **PR Close Cleanup Workflow Run (`pull_request` closed)**: `40080468687` (`PR Preview Environment Lifecycle` — `completed / success` in `3m01s`)
   - Executed `./bin/previewctl delete pr-1 --wait --timeout 3m` and confirmed `Namespace/preview-pr-1` was completely removed (`NotFound`)
 
@@ -352,17 +352,17 @@ preview_ttl_cleanup_delay_seconds_count 0
 Name:               pr-1
 Phase:              Ready
 Namespace:          preview-pr-1
-Preview URL:        http://35.219.134.88/preview/pr-1
-Image:              us-west4-docker.pkg.dev/enes-turan-demo/gke-ephemeral-env/sample-app:pr-1-815e888
+Preview URL:        http://203.0.113.10/preview/pr-1
+Image:              us-west4-docker.pkg.dev/your-gcp-project-id/gke-ephemeral-env/sample-app:pr-1-815e888
 Developer / PR:     devenes (PR #1)
 Ready Replicas:     1/1
 Remaining TTL:      58m30s
 Created At:         2026-10-24T12:01:40+03:00
 Ready At:           2026-10-24T12:02:08+03:00
 Expires At:         2026-10-24T13:02:08+03:00
-Message:            Environment ready at http://35.219.134.88/preview/pr-1
+Message:            Environment ready at http://203.0.113.10/preview/pr-1
 
-=== External HTTP Verification Response (http://35.219.134.88/preview/pr-1/) ===
+=== External HTTP Verification Response (http://203.0.113.10/preview/pr-1/) ===
 {
   "service": "preview-sample-app",
   "status": "running",

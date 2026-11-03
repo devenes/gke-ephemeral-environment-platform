@@ -45,7 +45,7 @@ func TestReconcilerProvisionAndReady(t *testing.T) {
 			PRNumber:   200,
 			Repository: "devenes/gke-ephemeral-environment-platform",
 			CommitSHA:  "1234567",
-			Image:      "us-west4-docker.pkg.dev/enes-turan-demo/gke-ephemeral-env/sample-app:v0.1.0",
+			Image:      "us-west4-docker.pkg.dev/your-gcp-project-id/gke-ephemeral-env/sample-app:v0.1.0",
 			TTLSeconds: 600,
 			Replicas:   1,
 			Port:       8080,
@@ -62,7 +62,7 @@ func TestReconcilerProvisionAndReady(t *testing.T) {
 		Client: cl,
 		Scheme: scheme,
 		Config: ReconcilerConfig{
-			Policy:           validation.DefaultPolicy("us-west4-docker.pkg.dev/enes-turan-demo/gke-ephemeral-env/"),
+			Policy:           validation.DefaultPolicy("us-west4-docker.pkg.dev/your-gcp-project-id/gke-ephemeral-env/"),
 			GatewayName:      "preview-shared-gateway",
 			GatewayNamespace: "preview-platform-system",
 			ProxySubnetCIDR:  "10.42.16.0/23",
@@ -159,7 +159,7 @@ func TestReconcilerValidationFailure(t *testing.T) {
 		Client: cl,
 		Scheme: scheme,
 		Config: ReconcilerConfig{
-			Policy:        validation.DefaultPolicy("us-west4-docker.pkg.dev/enes-turan-demo/gke-ephemeral-env/"),
+			Policy:        validation.DefaultPolicy("us-west4-docker.pkg.dev/your-gcp-project-id/gke-ephemeral-env/"),
 			SkipHTTPRoute: true,
 		},
 	}
@@ -195,7 +195,7 @@ func TestReconcilerTTLExpiration(t *testing.T) {
 			Generation:        1,
 		},
 		Spec: v1alpha1.PreviewEnvironmentSpec{
-			Image:      "us-west4-docker.pkg.dev/enes-turan-demo/gke-ephemeral-env/sample-app:v0.1.0",
+			Image:      "us-west4-docker.pkg.dev/your-gcp-project-id/gke-ephemeral-env/sample-app:v0.1.0",
 			TTLSeconds: 60,
 		},
 		Status: v1alpha1.PreviewEnvironmentStatus{
@@ -214,7 +214,7 @@ func TestReconcilerTTLExpiration(t *testing.T) {
 		Client: cl,
 		Scheme: scheme,
 		Config: ReconcilerConfig{
-			Policy:        validation.DefaultPolicy("us-west4-docker.pkg.dev/enes-turan-demo/gke-ephemeral-env/"),
+			Policy:        validation.DefaultPolicy("us-west4-docker.pkg.dev/your-gcp-project-id/gke-ephemeral-env/"),
 			SkipHTTPRoute: true,
 		},
 	}

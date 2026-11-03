@@ -13,7 +13,7 @@ LATEST_REPORT="artifacts/test-results/latest-test-matrix.md"
 BENCH_FILE="artifacts/benchmarks/scale-benchmark-${RUN_TS}.json"
 LATEST_BENCH="artifacts/benchmarks/latest-scale-benchmark.json"
 
-REGISTRY="us-west4-docker.pkg.dev/enes-turan-demo/gke-ephemeral-env"
+REGISTRY="us-west4-docker.pkg.dev/your-gcp-project-id/gke-ephemeral-env"
 SAMPLE_IMAGE="${REGISTRY}/sample-app:v0.1.0"
 
 log() {
@@ -52,7 +52,7 @@ cat > "${REPORT_FILE}" <<EOF
 # Live GKE Integration & E2E Test Matrix Evidence
 
 - **Run Timestamp (UTC)**: \`$(date -u +%Y-%m-%dT%H:%M:%SZ)\`
-- **GCP Project**: \`enes-turan-demo\`
+- **GCP Project**: \`your-gcp-project-id\`
 - **GKE Cluster**: \`gke-ephemeral-env-cluster\` (\`us-west4-a\`)
 - **Sample Image**: \`${SAMPLE_IMAGE}\`
 EOF
@@ -251,7 +251,7 @@ if [ "$(echo "${BODY_ALPHA}" | jq -r '.environmentName')" != "env-alpha" ] || [ 
   exit 1
 fi
 
-FWD_RULES="$(gcloud compute forwarding-rules list --project=enes-turan-demo --regions=us-west4 --format='table(name,IPAddress,target)')"
+FWD_RULES="$(gcloud compute forwarding-rules list --project=your-gcp-project-id --regions=us-west4 --format='table(name,IPAddress,target)')"
 T04_LIST="$(./bin/previewctl list)"
 
 record_kv "Status" "**PASS**"

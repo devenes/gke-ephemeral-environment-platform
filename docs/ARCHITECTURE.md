@@ -124,7 +124,7 @@ In each tenant namespace (`preview-<name>`), the controller creates a `NetworkPo
 #### `spec` Fields
 - `environmentName` (optional override; defaults to `metadata.name`, DNS-1035 label validated).
 - `prNumber` (`int`, optional, `>= 1`) & `repository` (`string`, e.g., `devenes/gke-ephemeral-environment-platform`) & `commitSHA` (`string`) & `developer` (`string`).
-- `image` (`string`, required): Container image reference; validated by both CEL / OpenAPI schema rules and controller policy against the allowed registry prefix (`us-west4-docker.pkg.dev/enes-turan-demo/gke-ephemeral-env/`) and explicit tag or `@sha256:` digest (rejecting `:latest` or untagged images).
+- `image` (`string`, required): Container image reference; validated by both CEL / OpenAPI schema rules and controller policy against the allowed registry prefix (`us-west4-docker.pkg.dev/your-gcp-project-id/gke-ephemeral-env/`) and explicit tag or `@sha256:` digest (rejecting `:latest` or untagged images).
 - `ttlSeconds` (`int32`, default `3600`, min `60`, max `86400`): Time-to-live in seconds before automatic expiration and cleanup.
 - `replicas` (`int32`, default `1`, min `1`, max `3`): Desired application pod count.
 - `port` (`int32`, default `8080`, min `1024`, max `65535`): Container HTTP listening port (must be non-privileged `>= 1024`).

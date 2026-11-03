@@ -2,7 +2,7 @@
 
 ## 1. Pre-Provisioning Cost Estimate & Historical Runtime Cost (`us-west4` / `us-west4-a`)
 
-Before applying the Terraform plan, we estimated the hourly and daily run-rate of every cloud resource provisioned by this platform in `enes-turan-demo` (`us-west4`):
+Before applying the Terraform plan, we estimated the hourly and daily run-rate of every cloud resource provisioned by this platform in `your-gcp-project-id` (`us-west4`):
 
 | Resource | Configuration | Pricing Basis (`us-west4`) | Estimated Hourly Cost | Estimated Daily Cost |
 |---|---|---|---|---|
@@ -19,7 +19,7 @@ Before applying the Terraform plan, we estimated the hourly and daily run-rate o
 
 - **Active Runtime Window**: The Terraform infrastructure was provisioned between `2026-10-24T07:53Z` and `2026-10-24T08:03Z` and destroyed between `2026-10-24T09:16Z` and `2026-10-24T09:32Z` (~1.6 hours of active GKE cluster/node/NAT runtime and ~1.2 hours of active Regional External ALB forwarding rule runtime).
 - **Estimated Session Cost**: At `~$0.222/hr`, the historical session incurred an **estimated ~$0.35–$0.50** in Compute Engine VM, persistent disk, Cloud NAT, and Load Balancing charges before teardown.
-- **Important Distinction**: Destroying the cloud resources at the conclusion of testing reduces **future ongoing cost exposure to $0.00/hr**, but it does **not** mean the historical deployment had zero cost while it was running. Exact billed amounts are determined asynchronously by Google Cloud Billing invoice export (no BigQuery billing export dataset was configured in `enes-turan-demo`).
+- **Important Distinction**: Destroying the cloud resources at the conclusion of testing reduces **future ongoing cost exposure to $0.00/hr**, but it does **not** mean the historical deployment had zero cost while it was running. Exact billed amounts are determined asynchronously by Google Cloud Billing invoice export (no BigQuery billing export dataset was configured in `your-gcp-project-id`).
 
 ### Architectural Cost Optimization Decisions
 
@@ -34,7 +34,7 @@ Before applying the Terraform plan, we estimated the hourly and daily run-rate o
 
 ---
 
-## 2. Pre-Provisioning Regional & Global Quota Verification (`enes-turan-demo`)
+## 2. Pre-Provisioning Regional & Global Quota Verification (`your-gcp-project-id`)
 
 Verified via `gcloud compute regions describe us-west4` and `gcloud compute project-info describe` prior to provisioning:
 
@@ -65,9 +65,9 @@ Verified via `gcloud compute regions describe us-west4` and `gcloud compute proj
 
 ## 3. Post-Teardown Cloud Resource & Cost Status (`2026-10-24T09:33:00Z`)
 
-Independently verified via `gcloud` CLI across `enes-turan-demo` after executing `terraform apply tf-destroy.plan` (see [docs/TEARDOWN.md](TEARDOWN.md)):
+Independently verified via `gcloud` CLI across `your-gcp-project-id` after executing `terraform apply tf-destroy.plan` (see [docs/TEARDOWN.md](TEARDOWN.md)):
 
-| Resource Category | Post-Teardown Count in `enes-turan-demo` | Continuing Hourly Cost |
+| Resource Category | Post-Teardown Count in `your-gcp-project-id` | Continuing Hourly Cost |
 |---|---|---|
 | **GKE Clusters** (`gcloud container clusters list`) | `0` | `$0.00/hr` |
 | **Compute Engine VMs, Disks, Instance Groups** | `0` VMs, `0` Disks, `0` Instance Groups | `$0.00/hr` |

@@ -8,14 +8,14 @@ permissions:
   contents: read
 
 env:
-  GCP_PROJECT_ID: "enes-turan-demo"
-  GCP_PROJECT_NUMBER: "697289276442"
+  GCP_PROJECT_ID: "your-gcp-project-id"
+  GCP_PROJECT_NUMBER: "123456789012"
   GCP_REGION: "us-west4"
   GKE_ZONE: "us-west4-a"
   GKE_CLUSTER: "gke-ephemeral-env-cluster"
-  WIF_PROVIDER: "projects/697289276442/locations/global/workloadIdentityPools/gke-ephemeral-gh-pool/providers/github-oidc"
-  WIF_SERVICE_ACCOUNT: "gke-ephemeral-gh-actions@enes-turan-demo.iam.gserviceaccount.com"
-  ARTIFACT_REGISTRY: "us-west4-docker.pkg.dev/enes-turan-demo/gke-ephemeral-env"
+  WIF_PROVIDER: "projects/123456789012/locations/global/workloadIdentityPools/gke-ephemeral-gh-pool/providers/github-oidc"
+  WIF_SERVICE_ACCOUNT: "gke-ephemeral-gh-actions@your-gcp-project-id.iam.gserviceaccount.com"
+  ARTIFACT_REGISTRY: "us-west4-docker.pkg.dev/your-gcp-project-id/gke-ephemeral-env"
 
 jobs:
   security-gate:
